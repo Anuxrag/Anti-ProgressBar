@@ -33,7 +33,7 @@ Clone the repository:
 
 Bash
 
-git clone https://github.com/your-username/anti-progress-bar.git
+git clone https://github.com/anuxrag/Anti-ProgressBar.git
 Navigate to the directory:
 
 Bash
