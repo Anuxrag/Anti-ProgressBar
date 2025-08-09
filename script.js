@@ -46,7 +46,7 @@
     let startTime = Date.now();
     let totalTimeWasted = Number(localStorage.getItem('apb_total_ms') || 0);
     let sessionCrashes = 0;
-    let soundOn = true;
+    let soundOn = false;
 
     // --- Core Functions ---
     function updateUI() {
@@ -119,27 +119,43 @@
     }
     
     function crashAndRestart() {
-        sessionCrashes++;
-        setStatus(pick(crashMessages));
-        setMessage("Restarting…");
-        playCrash();
-        vibrate();
-        screenShake();
-        earnAchievements();
+    sessionCrashes++;
+    setStatus(pick(crashMessages));
+    setMessage("Restarting…");
+    playCrash();
+    vibrate(200); // Longer vibration for a crash
+    earnAchievements();
 
-        // Fake fade out and restart animation
-        barFill.style.transition = 'width 300ms ease';
-        barFill.style.width = '0%';
+    // 1. Trigger the shake animation on the card.
+    screenShake();
+
+    // 2. After a brief moment, add the 'dropping' class to make the card fall.
+    setTimeout(() => {
+        mainCard.classList.add('dropping');
+    }, 150);
+
+    // 3. Animate the progress bar fill to zero.
+    barFill.style.transition = 'width 400ms ease-in';
+    barFill.style.width = '0%';
+
+    // 4. Set a timeout to reset the UI after the animations have finished.
+    const resetDelay = 1200; // Gives time for shake (450ms) + drop (700ms) to play out.
+    setTimeout(() => {
+        // Remove the animation class to reset the card's position and opacity.
+        mainCard.classList.remove('dropping');
+
+        // Reset the progress bar to a new "almost done" state.
+        const newHigh = Math.floor(85 + Math.random() * 14); // 85–99
+        progress = Math.min(99, newHigh);
         
-        setTimeout(() => {
-            const newHigh = Math.floor(85 + Math.random() * 14); // 85–99
-            progress = Math.min(99, newHigh);
-            barFill.style.transition = 'width 600ms cubic-bezier(.2,.7,.2,1)';
-            setStatus("Almost done…");
-            setMessage("Resolving previous success attempt…");
-            updateUI();
-        }, 420);
-    }
+        // Use the smooth transition for the bar's reappearance.
+        barFill.style.transition = 'width 600ms cubic-bezier(.2,.7,.2,1)';
+        
+        setStatus("Almost done…");
+        setMessage("Resolving previous success attempt…");
+        updateUI(); // Updates text and bar width, triggering the fill animation.
+    }, resetDelay);
+}
 
     // --- Achievements & Timers ---
     function earnAchievements() {
@@ -200,8 +216,7 @@
 
     function updateLeaderboard() {
         const fake = [
-            { name: "SHIBIN C MATHEW", ms: 12 * 3610 * 1000 },
-            { name: "GOUTHAM KRISHNA", ms: 7 * 3603 * 1000 },
+            { name: "John W.", ms: 12 * 3600 * 1000 },
             { name: "AI Bot", ms: Number.POSITIVE_INFINITY },
             { name: "You", ms: totalTimeWasted + (Date.now() - startTime) }
         ];
